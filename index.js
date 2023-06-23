@@ -104,6 +104,15 @@ async function createEmtyFile(fileName) {
     }
 }
 
+async function renameFile(oldName, newName) {
+    try {
+        await fs.rename(oldName, newName);
+        console.log(`File ${oldName} renamed to ${newName} successfully`);
+    } catch (error) {
+        console.error('Error: ', error);
+    }
+}
+
 async function processCommand(command) {
 
     if (command === 'up') {
@@ -140,8 +149,12 @@ async function processCommand(command) {
     } else if (command.startsWith('add')) {
         const filePath = command.slice(4).trim();
         createEmtyFile(filePath);
-    }
-    else if (command === 'exit') {
+    } else if (command.startsWith('rn')) {
+        const parts = command.split(' ');
+        const filePath = parts[1];
+        const newName = parts[2];
+        renameFile(filePath, newName);
+    } else if (command === 'exit') {
         rl.close();
     } else {
         console.log('Invalid command');
