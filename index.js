@@ -93,6 +93,17 @@ async function cat(filePath) {
     }
 }
 
+async function createEmtyFile(fileName) {
+    try {
+        const filePath = path.join(currentDirectory, fileName);
+
+        await fs.writeFile(filePath, '');
+        console.log(`File ${fileName} created successfully`)
+    } catch (error) {
+        console.log('Error: ', error);
+    }
+}
+
 async function processCommand(command) {
 
     if (command === 'up') {
@@ -126,6 +137,9 @@ async function processCommand(command) {
     } else if (command.startsWith('cat')) {
         const filePath = command.slice(4).trim();
         cat(filePath);
+    } else if (command.startsWith('add')) {
+        const filePath = command.slice(4).trim();
+        createEmtyFile(filePath);
     }
     else if (command === 'exit') {
         rl.close();
