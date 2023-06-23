@@ -1,4 +1,4 @@
-import { stat } from 'fs';
+import { createReadStream } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
@@ -75,6 +75,24 @@ async function printDirectoryContents() {
     }
 }
 
+async function cat(filePath) {
+    try {
+        const readable = createReadStream(filePath, 'utf-8');
+
+        readable.on('data', (chunk) => {
+            process.stdout.write(chunk);
+        });
+
+        readable.on('end', () => console.log('Reading file ended'));
+
+        readable.on('error', (error) => {
+            console.error('Error:', error);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
 async function processCommand(command) {
 
     if (command === 'up') {
@@ -105,6 +123,9 @@ async function processCommand(command) {
         printCurrentDirectory();
     } else if (command === 'ls') {
         await printDirectoryContents();
+    } else if (command.startsWith('cat')) {
+        const filePath = command.slice(4).trim();
+        cat(filePath);
     }
     else if (command === 'exit') {
         rl.close();
