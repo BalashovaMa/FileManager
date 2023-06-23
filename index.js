@@ -60,7 +60,25 @@ function processCommand(command) {
         } else {
             console.log('Already at the root directory');
         }
-    } else if (command === 'exit') {
+    } else if (command.startsWith('cd ')) {
+        //Change the current working directory to the selected folder
+        const targetDirectory = command.slice(3).trim();
+
+        const absolutePath = path.join(currentDirectory, targetDirectory);
+
+        if (!fs.existsSync(absolutePath)) {
+            console.log('Directory does not exist');
+            return;
+        }
+        const relativePath = path.relative(homeDirectory, absolutePath);
+        if (relativePath.startsWith('..')) {
+            console.log('Invalid directory path');
+            return;
+        }
+        currentDirectory = absolutePath;
+        printCurrentDirectory();
+    }
+    else if (command === 'exit') {
         rl.close();
     } else {
         console.log('Invalid command');
