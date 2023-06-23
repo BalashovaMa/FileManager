@@ -1,4 +1,4 @@
-import { createReadStream } from 'fs';
+import { createReadStream, createWriteStream } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
@@ -113,6 +113,25 @@ async function renameFile(oldName, newName) {
     }
 }
 
+function copyFile(sourcePath, destinationPath) {
+    const readStream = createReadStream(sourcePath);
+    const writeStream = createWriteStream(destinationPath);
+
+    readStream.pipe(writeStream);
+
+    readStream.on('error', (error) => {
+        console.error('Error reading the file:', error);
+    });
+
+    writeStream.on('error', (error) => {
+        console.error('Error writing the file:', error);
+    });
+
+    writeStream.on('finish', () => {
+        console.log('File copied successfully.');
+    });
+}
+
 async function processCommand(command) {
 
     if (command === 'up') {
@@ -154,6 +173,11 @@ async function processCommand(command) {
         const filePath = parts[1];
         const newName = parts[2];
         renameFile(filePath, newName);
+    } else if (command.startsWith('cp')) {
+        const parts = command.split(' ');
+        const sourcePath = parts[1];
+        const destinationPath = parts[2];
+        copyFile(sourcePath, destinationPath);
     } else if (command === 'exit') {
         rl.close();
     } else {
