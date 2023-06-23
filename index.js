@@ -1,4 +1,5 @@
-import fs from 'fs';
+import { stat } from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
 
@@ -10,17 +11,6 @@ let currentDirectory = process.cwd();
 
 function printCurrentDirectory() {
     console.log(`You are currently in ${currentDirectory}`);
-}
-
-//Checking the valid path range before changing the current working directory
-function changeDirectory(newDirectory) {
-    const absolutePath = path.resolve(currentDirectory, newDirectory);
-    if (!absolutePath.startsWith(homeDirectory)) {
-        console.log('Invalid directory path');
-        return;
-    }
-    currentDirectory = absolutePath;
-    printCurrentDirectory();
 }
 
 const args = process.argv.slice(2);
@@ -49,7 +39,43 @@ const rl = readline.createInterface({
 printCurrentDirectory();
 printCommandPrompt();
 
-function processCommand(command) {
+async function printDirectoryContents() {
+    try {
+        const contents = await fs.readdir(currentDirectory);
+        const files = [];
+        const directories = [];
+
+        for (const item of contents) {
+            const itemPath = path.join(currentDirectory, item);
+            const stats = await fs.stat(itemPath);
+
+            const fileInfo = {
+                name: item,
+                type: stats.isDirectory() ? 'Directory' : 'File',
+            }
+
+            if (stats.isDirectory()) {
+                directories.push(fileInfo);
+            } else {
+                files.push(fileInfo);
+            }
+        }
+        const sortedDirectories = directories.sort((a, b) => a.name.localeCompare(b.name));
+        const sortedFiles = files.sort((a, b) => a.name.localeCompare(b.name));
+
+        const table = [...sortedDirectories, ...sortedFiles].map((item, index) => ({
+            index: index + 1,
+            name: item.name,
+            type: item.type,
+        }));
+
+        console.table(table, ['index', 'name', 'type']);
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function processCommand(command) {
 
     if (command === 'up') {
         //Change the current working directory to the parent directory
@@ -77,6 +103,8 @@ function processCommand(command) {
         }
         currentDirectory = absolutePath;
         printCurrentDirectory();
+    } else if (command === 'ls') {
+        await printDirectoryContents();
     }
     else if (command === 'exit') {
         rl.close();
