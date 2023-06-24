@@ -156,6 +156,15 @@ async function moveFile(sourcePath, destinationPath) {
     }
   }
 
+  async function removeFile(filePath) {
+    try {
+      await fs.unlink(filePath);
+      console.log('File removed successfully.');
+    } catch (error) {
+      console.error('Error removing file:', error);
+    }
+  }
+
 async function processCommand(command) {
 
     if (command === 'up') {
@@ -207,6 +216,9 @@ async function processCommand(command) {
         const sourcePath = parts[1];
         const destinationPath = parts[2];
         moveFile(sourcePath, destinationPath);
+    } else if (command.startsWith('rm')) {
+        const filePath = command.slice(3).trim();
+        removeFile(filePath);
     } else if (command === 'exit') {
         rl.close();
     } else {
