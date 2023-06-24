@@ -1,4 +1,4 @@
-import { createReadStream, createWriteStream } from 'fs';
+import { createReadStream, createWriteStream, unlink} from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
@@ -132,6 +132,30 @@ function copyFile(sourcePath, destinationPath) {
     });
 }
 
+async function moveFile(sourcePath, destinationPath) {
+    try {
+      const readStream = createReadStream(sourcePath);
+      const writeStream = createWriteStream(destinationPath);
+  
+      readStream.pipe(writeStream);
+  
+      await new Promise((resolve, reject) => {
+        writeStream.on('finish', resolve);
+        writeStream.on('error', reject);
+      });
+  
+      unlink(sourcePath, (error) => {
+        if (error) {
+          console.error('Error deleting the source file:', error);
+        } else {
+          console.log('File moved successfully.');
+        }
+      });
+    } catch (error) {
+      console.error('Error moving the file:', error);
+    }
+  }
+
 async function processCommand(command) {
 
     if (command === 'up') {
@@ -178,6 +202,11 @@ async function processCommand(command) {
         const sourcePath = parts[1];
         const destinationPath = parts[2];
         copyFile(sourcePath, destinationPath);
+    } else if (command.startsWith('mv')) {
+        const parts = command.split(' ');
+        const sourcePath = parts[1];
+        const destinationPath = parts[2];
+        moveFile(sourcePath, destinationPath);
     } else if (command === 'exit') {
         rl.close();
     } else {
