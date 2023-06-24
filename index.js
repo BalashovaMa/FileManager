@@ -2,6 +2,7 @@ import { createReadStream, createWriteStream, unlink} from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
+import os from 'os';
 
 //Get the home directory of the current user
 const homeDirectory = process.env.HOME || process.env.USERPROFILE;
@@ -165,7 +166,23 @@ async function moveFile(sourcePath, destinationPath) {
     }
   }
 
-async function processCommand(command) {
+  function outputEOL() {
+    const EOL = os.EOL;
+    console.log('System End-Of-Line (EOL):', JSON.stringify(EOL));
+  }
+
+  function getInformationAboutCPU() {
+    const cpus = os.cpus();
+    console.log('Number of CPUs:', cpus.length);
+
+    cpus.forEach((cpu, index) => {
+        console.log(`CPU ${index + 1}:`);
+        console.log('  Model:', cpu.model);
+        console.log('  Speed:', cpu.speed / 1000, 'GHz');
+  });
+}
+
+    async function processCommand(command) {
 
     if (command === 'up') {
         //Change the current working directory to the parent directory
@@ -219,6 +236,10 @@ async function processCommand(command) {
     } else if (command.startsWith('rm')) {
         const filePath = command.slice(3).trim();
         removeFile(filePath);
+    } else if (command === 'os --EOL') {
+        outputEOL();
+    } else if (command === 'os --cpus') {
+        getInformationAboutCPU();
     } else if (command === 'exit') {
         rl.close();
     } else {
