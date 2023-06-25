@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
 import os from 'os';
+import crypto from 'crypto';
 
 //Get the home directory of the current user
 const homeDirectory = process.env.HOME || process.env.USERPROFILE;
@@ -197,6 +198,23 @@ function getArchitecture() {
     console.log('Architecture:', architecture);
 }
 
+async function calculateFileHash(filePath) {
+    try {
+      const algorithm = 'sha256';
+  
+      const hash = crypto.createHash(algorithm);
+      const stream = createReadStream(filePath);
+  
+      return new Promise((resolve, reject) => {
+        stream.on('data', (chunk) => hash.update(chunk));
+        stream.on('end', () => resolve(hash.digest('hex')));
+        stream.on('error', (error) => reject(error));
+      });
+    } catch (error) {
+      throw new Error('Failed to calculate file hash');
+    }
+  }
+
     async function processCommand(command) {
 
     if (command === 'up') {
@@ -262,6 +280,11 @@ function getArchitecture() {
         getCurrentUserName();
     } else if (command === 'os --architecture') {
         getArchitecture();
+    } else if (command.startsWith('hash')) {
+        const filePath = command.slice(5).trim();
+        calculateFileHash(filePath)
+            .then((hash) => console.log('File hash:', hash))
+            .catch((error) => console.error('Error:', error));
     } else if (command === 'exit') {
         rl.close();
     } else {
