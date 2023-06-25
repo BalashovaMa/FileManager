@@ -4,6 +4,8 @@ import path from 'path';
 import readline from 'readline';
 import os from 'os';
 import crypto from 'crypto';
+import zlib from 'zlib';
+import { resolve } from 'url';
 
 //Get the home directory of the current user
 const homeDirectory = process.env.HOME || process.env.USERPROFILE;
@@ -215,6 +217,29 @@ async function calculateFileHash(filePath) {
     }
   }
 
+  async function compressFile(sourcePath, destinationPath) {
+    try {
+      const readStream = fs.createReadStream(sourcePath);
+      const writeStream = fs.createWriteStream(destinationPath);
+  
+      const brotliOptions = {
+        params: {
+          [zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
+        },
+      };
+  
+      const compressStream = zlib.createBrotliCompress(brotliOptions);
+  
+      return new Promise((resolve, reject) => {
+        readStream.pipe(compressStream).pipe(writeStream);
+        writeStream.on('finish', resolve);
+        writeStream.on('error', reject);
+      });
+    } catch (error) {
+      throw new Error('Failed to compress file');
+    }
+  }
+
     async function processCommand(command) {
 
     if (command === 'up') {
@@ -285,6 +310,13 @@ async function calculateFileHash(filePath) {
         calculateFileHash(filePath)
             .then((hash) => console.log('File hash:', hash))
             .catch((error) => console.error('Error:', error));
+    } else if (command.startsWith('compress')) {
+        const parts = command.split(' ');
+        const sourcePath = parts[1];
+        const destinationPath = parts[2];
+        compressFile(sourcePath, destinationPath)
+  .then(() => console.log('File compressed successfully'))
+  .catch((error) => console.error('Error:', error));
     } else if (command === 'exit') {
         rl.close();
     } else {
