@@ -182,6 +182,21 @@ async function moveFile(sourcePath, destinationPath) {
   });
 }
 
+function getHomeDir() {
+    const homedir = os.homedir();
+    console.log('Home Directory:', homedir);
+}
+
+function getCurrentUserName() {
+    const username = os.userInfo().username;
+    console.log('Username:', username);
+}
+
+function getArchitecture() {
+    const architecture = process.arch;
+    console.log('Architecture:', architecture);
+}
+
     async function processCommand(command) {
 
     if (command === 'up') {
@@ -240,6 +255,13 @@ async function moveFile(sourcePath, destinationPath) {
         outputEOL();
     } else if (command === 'os --cpus') {
         getInformationAboutCPU();
+    } else if (command === 'os --homedir') {
+        getHomeDir();
+    } 
+    else if (command === 'os --username') {
+        getCurrentUserName();
+    } else if (command === 'os --architecture') {
+        getArchitecture();
     } else if (command === 'exit') {
         rl.close();
     } else {
