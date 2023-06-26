@@ -1,4 +1,4 @@
-import { createReadStream, createWriteStream, unlink} from 'fs';
+import { createReadStream, createWriteStream, unlink } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
@@ -138,43 +138,43 @@ function copyFile(sourcePath, destinationPath) {
 
 async function moveFile(sourcePath, destinationPath) {
     try {
-      const readStream = createReadStream(sourcePath);
-      const writeStream = createWriteStream(destinationPath);
-  
-      readStream.pipe(writeStream);
-  
-      await new Promise((resolve, reject) => {
-        writeStream.on('finish', resolve);
-        writeStream.on('error', reject);
-      });
-  
-      unlink(sourcePath, (error) => {
-        if (error) {
-          console.error('Error deleting the source file:', error);
-        } else {
-          console.log('File moved successfully.');
-        }
-      });
-    } catch (error) {
-      console.error('Error moving the file:', error);
-    }
-  }
+        const readStream = createReadStream(sourcePath);
+        const writeStream = createWriteStream(destinationPath);
 
-  async function removeFile(filePath) {
+        readStream.pipe(writeStream);
+
+        await new Promise((resolve, reject) => {
+            writeStream.on('finish', resolve);
+            writeStream.on('error', reject);
+        });
+
+        unlink(sourcePath, (error) => {
+            if (error) {
+                console.error('Error deleting the source file:', error);
+            } else {
+                console.log('File moved successfully.');
+            }
+        });
+    } catch (error) {
+        console.error('Error moving the file:', error);
+    }
+}
+
+async function removeFile(filePath) {
     try {
-      await fs.unlink(filePath);
-      console.log('File removed successfully.');
+        await fs.unlink(filePath);
+        console.log('File removed successfully.');
     } catch (error) {
-      console.error('Error removing file:', error);
+        console.error('Error removing file:', error);
     }
-  }
+}
 
-  function outputEOL() {
+function outputEOL() {
     const EOL = os.EOL;
     console.log('System End-Of-Line (EOL):', JSON.stringify(EOL));
-  }
+}
 
-  function getInformationAboutCPU() {
+function getInformationAboutCPU() {
     const cpus = os.cpus();
     console.log('Number of CPUs:', cpus.length);
 
@@ -182,7 +182,7 @@ async function moveFile(sourcePath, destinationPath) {
         console.log(`CPU ${index + 1}:`);
         console.log('  Model:', cpu.model);
         console.log('  Speed:', cpu.speed / 1000, 'GHz');
-  });
+    });
 }
 
 function getHomeDir() {
@@ -202,45 +202,63 @@ function getArchitecture() {
 
 async function calculateFileHash(filePath) {
     try {
-      const algorithm = 'sha256';
-  
-      const hash = crypto.createHash(algorithm);
-      const stream = createReadStream(filePath);
-  
-      return new Promise((resolve, reject) => {
-        stream.on('data', (chunk) => hash.update(chunk));
-        stream.on('end', () => resolve(hash.digest('hex')));
-        stream.on('error', (error) => reject(error));
-      });
-    } catch (error) {
-      throw new Error('Failed to calculate file hash');
-    }
-  }
+        const algorithm = 'sha256';
 
-  async function compressFile(sourcePath, destinationPath) {
+        const hash = crypto.createHash(algorithm);
+        const stream = createReadStream(filePath);
+
+        return new Promise((resolve, reject) => {
+            stream.on('data', (chunk) => hash.update(chunk));
+            stream.on('end', () => resolve(hash.digest('hex')));
+            stream.on('error', (error) => reject(error));
+        });
+    } catch (error) {
+        throw new Error('Failed to calculate file hash');
+    }
+}
+
+
+async function compressFile(sourcePath, destinationPath) {
     try {
-      const readStream = fs.createReadStream(sourcePath);
-      const writeStream = fs.createWriteStream(destinationPath);
-  
-      const brotliOptions = {
-        params: {
-          [zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
-        },
-      };
-  
-      const compressStream = zlib.createBrotliCompress(brotliOptions);
-  
-      return new Promise((resolve, reject) => {
-        readStream.pipe(compressStream).pipe(writeStream);
-        writeStream.on('finish', resolve);
-        writeStream.on('error', reject);
-      });
-    } catch (error) {
-      throw new Error('Failed to compress file');
-    }
-  }
+        const readStream = createReadStream(sourcePath, { encoding: null });
+        const writeStream = createWriteStream(destinationPath, { encoding: null });
 
-    async function processCommand(command) {
+        const brotliOptions = {
+            params: {
+                [zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
+            },
+        };
+
+        const compressStream = zlib.createBrotliCompress(brotliOptions);
+
+        return new Promise((resolve, reject) => {
+            readStream.pipe(compressStream).pipe(writeStream);
+            writeStream.on('finish', resolve);
+            writeStream.on('error', reject);
+        });
+    } catch (error) {
+        throw new Error('Failed to compress file');
+    }
+}
+
+async function decompressFile(sourcePath, destinationPath) {
+    try {
+        const readStream = createReadStream(sourcePath, { encoding: null });
+        const writeStream = createWriteStream(destinationPath, { encoding: null });
+
+        const decompressStream = zlib.createBrotliDecompress();
+
+        return new Promise((resolve, reject) => {
+            readStream.pipe(decompressStream).pipe(writeStream);
+            writeStream.on('finish', resolve);
+            writeStream.on('error', reject);
+        });
+    } catch (error) {
+        throw new Error('Failed to compress file');
+    }
+}
+
+async function processCommand(command) {
 
     if (command === 'up') {
         //Change the current working directory to the parent directory
@@ -300,7 +318,7 @@ async function calculateFileHash(filePath) {
         getInformationAboutCPU();
     } else if (command === 'os --homedir') {
         getHomeDir();
-    } 
+    }
     else if (command === 'os --username') {
         getCurrentUserName();
     } else if (command === 'os --architecture') {
@@ -314,9 +332,20 @@ async function calculateFileHash(filePath) {
         const parts = command.split(' ');
         const sourcePath = parts[1];
         const destinationPath = parts[2];
+        console.log(sourcePath);
+        console.log(destinationPath);
         compressFile(sourcePath, destinationPath)
-  .then(() => console.log('File compressed successfully'))
-  .catch((error) => console.error('Error:', error));
+            .then(() => console.log('File compressed successfully'))
+            .catch((error) => console.error('Error:', error));
+    } else if (command.startsWith('decompress')) {
+        const parts = command.split(' ');
+        const sourcePath = parts[1];
+        const destinationPath = parts[2];
+        console.log(sourcePath);
+        console.log(destinationPath);
+        decompressFile(sourcePath, destinationPath)
+            .then(() => console.log('File decompressed successfully'))
+            .catch((error) => console.error('Error:', error));
     } else if (command === 'exit') {
         rl.close();
     } else {
